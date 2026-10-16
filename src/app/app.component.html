@@ -1,4 +1,6 @@
+<!-- Barra superior con marca, contexto académico y acceso para cerrar sesión. -->
 <header class="site-header">
+  <!-- Enlace de marca que regresa a la página principal. -->
   <a class="brand" href="/" [attr.aria-label]="title + ' inicio'">
     <span class="brand-mark" aria-hidden="true">S</span>
     <span class="brand-name">SENATI <strong>TaskHub</strong></span>
@@ -9,12 +11,14 @@
   </div>
 </header>
 
+<!-- Pantalla de acceso demostrativo, visible cuando no hay una sesión local. -->
 <main *ngIf="!autenticado" class="login-shell">
   <section class="login-panel" aria-labelledby="login-title">
     <span class="brand-mark login-mark" aria-hidden="true">S</span>
     <p class="eyebrow">SENATI TASKHUB</p>
     <h1 id="login-title">Inicia sesión</h1>
     <p class="login-description">Ingresa para organizar tus tareas y entregas desde este dispositivo.</p>
+    <!-- Formulario que solicita el correo y la contraseña para la sesión de demostración. -->
     <form (ngSubmit)="iniciarSesion()">
       <label for="login-email">Correo electrónico</label>
       <input
@@ -35,18 +39,22 @@
         autocomplete="current-password"
         required
       >
+      <!-- Presenta errores de validación o de almacenamiento del inicio de sesión. -->
       <p *ngIf="errorInicioSesion" class="notification" role="alert">{{ errorInicioSesion }}</p>
       <button class="submit-button" type="submit" [disabled]="!correo.trim() || !contrasena">
         Ingresar
       </button>
     </form>
+    <!-- Aclara que este acceso no autentica contra el Campus Virtual. -->
     <p class="demo-disclaimer">
       Acceso de demostración: no valida cuentas del Campus Virtual. La sesión se guarda solo en este navegador.
     </p>
   </section>
 </main>
 
+<!-- Área de trabajo visible después de iniciar la sesión local. -->
 <main *ngIf="autenticado" class="page-shell">
+  <!-- Saludo y resumen numérico de tareas pendientes. -->
   <section class="welcome-panel" aria-labelledby="welcome-title">
     <div class="welcome-copy">
       <p class="eyebrow">TU ESPACIO DE APRENDIZAJE</p>
@@ -61,6 +69,7 @@
     </div>
   </section>
 
+  <!-- Indicador accesible que muestra conectividad y disponibilidad local. -->
   <div class="connection-status" [class.is-online]="online" [class.is-offline]="!online" role="status" aria-live="polite">
     <span class="connection-indicator" aria-hidden="true"></span>
     <span>{{ online ? 'Con conexión' : 'Sin conexión' }}</span>
@@ -69,7 +78,9 @@
     </span>
   </div>
 
+  <!-- Distribuye el catálogo y el formulario de entregas en paneles. -->
   <div class="content-grid">
+    <!-- Catálogo de actividades disponibles. -->
     <section class="tasks-panel" aria-labelledby="tasks-title">
       <div class="section-heading">
         <div>
@@ -79,11 +90,13 @@
         <span class="task-count">{{ tareas.length }} actividades</span>
       </div>
 
+      <!-- Informa mientras se obtiene el catálogo o cuando no hay tareas para mostrar. -->
       <p *ngIf="cargandoTareas" class="empty-state" role="status">Cargando tareas...</p>
       <p *ngIf="!cargandoTareas && tareas.length === 0" class="empty-state" role="status">
         No hay tareas disponibles por el momento.
       </p>
 
+      <!-- Recorre las tareas y permite elegir cuál se va a entregar. -->
       <div class="task-list" *ngIf="tareas.length > 0">
         <button
           class="task-card"
@@ -109,6 +122,7 @@
       </div>
     </section>
 
+    <!-- Formulario para asociar comentario y archivos a una tarea. -->
     <section class="submission-panel" aria-labelledby="submission-title">
       <div class="section-heading">
         <div>
@@ -119,7 +133,9 @@
       </div>
 
       <p class="form-intro">Adjunta tu trabajo y, si deseas, agrega un comentario.</p>
+      <!-- Envía el contenido del formulario al método que guarda localmente la entrega. -->
       <form (ngSubmit)="enviarEntrega()">
+        <!-- Selector de la actividad vinculada a esta entrega. -->
         <label for="selected-task">Tarea</label>
         <select
           id="selected-task"
@@ -134,6 +150,7 @@
           </option>
         </select>
 
+        <!-- Control para adjuntar varios archivos y lista de archivos elegidos. -->
         <label for="delivery-files">Archivos de la tarea</label>
         <input
           id="delivery-files"
@@ -151,6 +168,7 @@
           </li>
         </ul>
 
+        <!-- Campo opcional para describir el avance, limitado a 1000 caracteres. -->
         <label for="delivery-comment">Comentario (opcional)</label>
         <textarea
           id="delivery-comment"
@@ -162,6 +180,7 @@
         ></textarea>
         <span class="field-hint">Máximo 1000 caracteres</span>
 
+        <!-- Deshabilita el guardado mientras no haya contenido o falte una tarea. -->
         <button
           class="submit-button"
           type="submit"
@@ -171,11 +190,14 @@
         </button>
       </form>
 
+      <!-- Mensaje de resultado accesible para lectores de pantalla. -->
       <p *ngIf="mensajeNotificacion" class="notification" role="status" aria-live="polite">
         {{ mensajeNotificacion }}
       </p>
+      <!-- Explica que el registro es local y no se sincroniza con un servidor. -->
       <p class="privacy-note">Los archivos y comentarios se guardan localmente. La sincronización al Campus Virtual requiere una API que este proyecto aún no incluye.</p>
 
+      <!-- Bandeja que presenta las entregas previamente guardadas en este dispositivo. -->
       <section class="saved-deliveries" aria-labelledby="saved-deliveries-title">
         <div class="saved-heading">
           <h3 id="saved-deliveries-title">Entregas guardadas</h3>
@@ -200,6 +222,7 @@
   </div>
 </main>
 
+<!-- Pie de página con el nombre y mensaje institucional de la aplicación. -->
 <footer class="site-footer">
   <span>SENATI TaskHub</span>
   <span>Aprende y avanza, con o sin conexión.</span>
