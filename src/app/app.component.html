@@ -1,0 +1,206 @@
+<header class="site-header">
+  <a class="brand" href="/" [attr.aria-label]="title + ' inicio'">
+    <span class="brand-mark" aria-hidden="true">S</span>
+    <span class="brand-name">SENATI <strong>TaskHub</strong></span>
+  </a>
+  <div class="header-actions">
+    <span class="header-caption">Gestión académica</span>
+    <button *ngIf="autenticado" class="logout-button" type="button" (click)="cerrarSesion()">Cerrar sesión</button>
+  </div>
+</header>
+
+<main *ngIf="!autenticado" class="login-shell">
+  <section class="login-panel" aria-labelledby="login-title">
+    <span class="brand-mark login-mark" aria-hidden="true">S</span>
+    <p class="eyebrow">SENATI TASKHUB</p>
+    <h1 id="login-title">Inicia sesión</h1>
+    <p class="login-description">Ingresa para organizar tus tareas y entregas desde este dispositivo.</p>
+    <form (ngSubmit)="iniciarSesion()">
+      <label for="login-email">Correo electrónico</label>
+      <input
+        id="login-email"
+        name="correo"
+        type="email"
+        [(ngModel)]="correo"
+        autocomplete="username"
+        placeholder="estudiante@senati.pe"
+        required
+      >
+      <label for="login-password">Contraseña</label>
+      <input
+        id="login-password"
+        name="contrasena"
+        type="password"
+        [(ngModel)]="contrasena"
+        autocomplete="current-password"
+        required
+      >
+      <p *ngIf="errorInicioSesion" class="notification" role="alert">{{ errorInicioSesion }}</p>
+      <button class="submit-button" type="submit" [disabled]="!correo.trim() || !contrasena">
+        Ingresar
+      </button>
+    </form>
+    <p class="demo-disclaimer">
+      Acceso de demostración: no valida cuentas del Campus Virtual. La sesión se guarda solo en este navegador.
+    </p>
+  </section>
+</main>
+
+<main *ngIf="autenticado" class="page-shell">
+  <section class="welcome-panel" aria-labelledby="welcome-title">
+    <div class="welcome-copy">
+      <p class="eyebrow">TU ESPACIO DE APRENDIZAJE</p>
+      <h1 id="welcome-title">Organiza tus entregas.</h1>
+      <p class="welcome-description">
+        Hola, {{ usuario }}. Revisa tus actividades y registra avances, incluso cuando no tengas conexión.
+      </p>
+    </div>
+    <div class="summary-card" aria-label="Resumen de tareas">
+      <span class="summary-number">{{ tareasPendientes }}</span>
+      <span class="summary-label">tareas pendientes</span>
+    </div>
+  </section>
+
+  <div class="connection-status" [class.is-online]="online" [class.is-offline]="!online" role="status" aria-live="polite">
+    <span class="connection-indicator" aria-hidden="true"></span>
+    <span>{{ online ? 'Con conexión' : 'Sin conexión' }}</span>
+    <span class="connection-detail">
+      {{ online ? 'El catálogo está disponible. Tus entregas se conservan en este dispositivo.' : 'Puedes continuar; el catálogo y tus entregas guardadas siguen disponibles en este dispositivo.' }}
+    </span>
+  </div>
+
+  <div class="content-grid">
+    <section class="tasks-panel" aria-labelledby="tasks-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">CATÁLOGO ACADÉMICO</p>
+          <h2 id="tasks-title">Mis tareas</h2>
+        </div>
+        <span class="task-count">{{ tareas.length }} actividades</span>
+      </div>
+
+      <p *ngIf="cargandoTareas" class="empty-state" role="status">Cargando tareas...</p>
+      <p *ngIf="!cargandoTareas && tareas.length === 0" class="empty-state" role="status">
+        No hay tareas disponibles por el momento.
+      </p>
+
+      <div class="task-list" *ngIf="tareas.length > 0">
+        <button
+          class="task-card"
+          type="button"
+          *ngFor="let tarea of tareas"
+          [class.is-selected]="tarea.id === tareaSeleccionadaId"
+          [attr.aria-pressed]="tarea.id === tareaSeleccionadaId"
+          (click)="seleccionarTarea(tarea.id)"
+        >
+          <span class="task-card-top">
+            <span class="course-name">{{ tarea.curso }}</span>
+            <span
+              class="task-status"
+              [class.status-completed]="tarea.estado.toLowerCase() === 'completado'"
+            >{{ tarea.estado }}</span>
+          </span>
+          <span class="task-title">{{ tarea.titulo }}</span>
+          <span class="task-meta">
+            <span>{{ tarea.instructor }}</span>
+            <span class="due-date">Entrega: {{ tarea.fechaEntrega | date:'dd/MM/yyyy' }}</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="submission-panel" aria-labelledby="submission-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">REGISTRO DE AVANCE</p>
+          <h2 id="submission-title">Nueva entrega</h2>
+        </div>
+        <span class="upload-icon" aria-hidden="true">↗</span>
+      </div>
+
+      <p class="form-intro">Adjunta tu trabajo y, si deseas, agrega un comentario.</p>
+      <form (ngSubmit)="enviarEntrega()">
+        <label for="selected-task">Tarea</label>
+        <select
+          id="selected-task"
+          name="tarea"
+          [ngModel]="tareaSeleccionadaId"
+          (ngModelChange)="seleccionarTarea($event)"
+          [disabled]="tareas.length === 0"
+          required
+        >
+          <option *ngFor="let tarea of tareas" [ngValue]="tarea.id">
+            {{ tarea.curso }} — {{ tarea.titulo }}
+          </option>
+        </select>
+
+        <label for="delivery-files">Archivos de la tarea</label>
+        <input
+          id="delivery-files"
+          class="file-input"
+          name="archivos"
+          type="file"
+          multiple
+          (change)="seleccionarArchivos($event)"
+        >
+        <span class="field-hint">Puedes adjuntar uno o varios archivos; se guardarán en este dispositivo.</span>
+        <ul *ngIf="archivosSeleccionados.length > 0" class="selected-files" aria-label="Archivos seleccionados">
+          <li *ngFor="let archivo of archivosSeleccionados; let indice = index">
+            <span>{{ archivo.name }} <small>({{ archivo.size | number }} bytes)</small></span>
+            <button type="button" (click)="quitarArchivo(indice)" [attr.aria-label]="'Quitar ' + archivo.name">Quitar</button>
+          </li>
+        </ul>
+
+        <label for="delivery-comment">Comentario (opcional)</label>
+        <textarea
+          id="delivery-comment"
+          name="comentario"
+          [(ngModel)]="comentarioEntrega"
+          placeholder="Describe brevemente tu progreso..."
+          rows="5"
+          maxlength="1000"
+        ></textarea>
+        <span class="field-hint">Máximo 1000 caracteres</span>
+
+        <button
+          class="submit-button"
+          type="submit"
+          [disabled]="guardandoEntrega || (!comentarioEntrega.trim() && archivosSeleccionados.length === 0) || tareaSeleccionadaId === null"
+        >
+          {{ guardandoEntrega ? 'Guardando...' : 'Guardar entrega en este dispositivo' }}
+        </button>
+      </form>
+
+      <p *ngIf="mensajeNotificacion" class="notification" role="status" aria-live="polite">
+        {{ mensajeNotificacion }}
+      </p>
+      <p class="privacy-note">Los archivos y comentarios se guardan localmente. La sincronización al Campus Virtual requiere una API que este proyecto aún no incluye.</p>
+
+      <section class="saved-deliveries" aria-labelledby="saved-deliveries-title">
+        <div class="saved-heading">
+          <h3 id="saved-deliveries-title">Entregas guardadas</h3>
+          <span class="task-count">{{ entregasGuardadas.length }}</span>
+        </div>
+        <p *ngIf="entregasGuardadas.length === 0" class="saved-empty">
+          Las entregas guardadas en este dispositivo aparecerán aquí.
+        </p>
+        <article *ngFor="let entrega of entregasGuardadas" class="saved-delivery">
+          <div class="saved-delivery-top">
+            <strong>{{ obtenerNombreTarea(entrega.tareaId) }}</strong>
+            <span class="task-status">{{ entrega.estadoSincronizacion }}</span>
+          </div>
+          <p *ngIf="entrega.comentario">{{ entrega.comentario }}</p>
+          <ul *ngIf="entrega.archivos?.length" class="saved-files">
+            <li *ngFor="let archivo of entrega.archivos">{{ archivo.nombre }}</li>
+          </ul>
+          <time [attr.datetime]="entrega.fechaRegistro">{{ entrega.fechaRegistro | date:'dd/MM/yyyy, HH:mm' }}</time>
+        </article>
+      </section>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span>SENATI TaskHub</span>
+  <span>Aprende y avanza, con o sin conexión.</span>
+</footer>
